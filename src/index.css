@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optionnel : un petit fond gris clair pour tester */
+body {
+  @apply bg-gray-50;
+}
