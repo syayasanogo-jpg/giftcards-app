@@ -1,8 +1,9 @@
 import React, { useMemo, useState, useEffect } from "react";
+import Paiement from "./components/Paiement";
 
-/* ---- Demo Gift Cards (JS version) ---- */
+/* ====== Demo Gift Cards (JS) ====== */
 
-// Mock products
+// Produits mock
 const PRODUCTS = [
   {
     id: "apple-ci",
@@ -12,7 +13,7 @@ const PRODUCTS = [
     faceValues: [10000, 25000, 50000],
     country: "CI",
     description:
-      "Créditez votre identifiant Apple pour apps, musique et abonnements. *Vente sous agrément revendeur.*",
+      "Créditez votre identifiant Apple pour apps, musique et abonnements. *Démo*.",
   },
   {
     id: "psn-ci",
@@ -21,7 +22,7 @@ const PRODUCTS = [
       "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1887&auto=format&fit=crop",
     faceValues: [10000, 20000, 40000],
     country: "CI",
-    description: "Cartes PlayStation Store pour jeux, addons et PS Plus.",
+    description: "Cartes PlayStation Store pour jeux, addons et PS Plus. *Démo*.",
   },
   {
     id: "gplay-ci",
@@ -30,11 +31,11 @@ const PRODUCTS = [
       "https://images.unsplash.com/photo-1593359677879-35c066c3333d?q=80&w=1887&auto=format&fit=crop",
     faceValues: [10000, 15000, 30000],
     country: "CI",
-    description: "Apps, films et jeux sur Google Play.",
+    description: "Apps, films et jeux sur Google Play. *Démo*.",
   },
 ];
 
-// Mock “vault” (demo only)
+// Vault mock (NE PAS utiliser en prod côté client)
 const VAULT = {
   "psn-ci:10000": ["PSN-9JQ4-8ZKD-1X2C"],
   "psn-ci:20000": ["PSN-88ZX-2KLM-0PQ9"],
@@ -67,18 +68,37 @@ function useLocalStorage(key, initial) {
   return [val, setVal];
 }
 
+/* ====== UI ====== */
+
 function Header({ onOpenCart, onOpenWallet, onOpenAdmin }) {
   return (
     <header className="sticky top-0 z-50 backdrop-blur bg-white/70 border-b">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-2xl bg-black text-white grid place-items-center font-bold">GC</div>
+          <div className="h-9 w-9 rounded-2xl bg-black text-white grid place-items-center font-bold">
+            GC
+          </div>
           <div className="font-semibold text-lg">Gift Cards • MVP</div>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={onOpenWallet} className="px-3 py-1.5 rounded-xl border hover:bg-gray-50">Mon portefeuille</button>
-          <button onClick={onOpenCart} className="px-3 py-1.5 rounded-xl border hover:bg-gray-50">Panier</button>
-          <button onClick={onOpenAdmin} className="px-3 py-1.5 rounded-xl border hover:bg-gray-50">Admin</button>
+          <button
+            onClick={onOpenWallet}
+            className="px-3 py-1.5 rounded-xl border hover:bg-gray-50"
+          >
+            Mon portefeuille
+          </button>
+          <button
+            onClick={onOpenCart}
+            className="px-3 py-1.5 rounded-xl border hover:bg-gray-50"
+          >
+            Panier
+          </button>
+          <button
+            onClick={onOpenAdmin}
+            className="px-3 py-1.5 rounded-xl border hover:bg-gray-50"
+          >
+            Admin
+          </button>
         </div>
       </div>
     </header>
@@ -92,50 +112,101 @@ function ProductCard({ p, onAdd }) {
       <img src={p.image} alt={p.brand} className="h-36 w-full object-cover rounded-xl" />
       <div className="mt-3">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-lg">{p.brand} • {p.country}</h3>
-          <span className="text-sm text-gray-500">Montants: {p.faceValues.map(v => (v/1000).toFixed(0)+"k").join(" / ")}</span>
+          <h3 className="font-semibold text-lg">
+            {p.brand} • {p.country}
+          </h3>
+          <span className="text-sm text-gray-500">
+            Montants: {p.faceValues.map((v) => (v / 1000).toFixed(0) + "k").join(" / ")}
+          </span>
         </div>
         <p className="text-sm text-gray-600 mt-1">{p.description}</p>
         <div className="mt-3 flex items-center gap-2">
-          <select value={amount} onChange={e=> setAmount(parseInt(e.target.value))} className="border rounded-xl px-3 py-2">
-            {p.faceValues.map(v => (
-              <option key={v} value={v}>{v.toLocaleString()} CFA</option>
+          <select
+            value={amount}
+            onChange={(e) => setAmount(parseInt(e.target.value))}
+            className="border rounded-xl px-3 py-2"
+          >
+            {p.faceValues.map((v) => (
+              <option key={v} value={v}>
+                {v.toLocaleString()} CFA
+              </option>
             ))}
           </select>
-          <button onClick={() => onAdd(amount)} className="ml-auto px-4 py-2 rounded-xl bg-black text-white hover:opacity-90">Ajouter</button>
+          <button
+            onClick={() => onAdd(amount)}
+            className="ml-auto px-4 py-2 rounded-xl bg-black text-white hover:opacity-90"
+          >
+            Ajouter
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
-function CartDrawer({ open, onClose, items, onCheckout }) {
-  const total = items.reduce((s, it) => s + it.unitPrice * it.qty, 0);
+function CartDrawer({ open, onClose, items, onCheckout, total }) {
   return (
     <div className={`fixed inset-0 ${open ? "pointer-events-auto" : "pointer-events-none"}`}>
-      <div className={`absolute inset-0 bg-black/30 transition ${open ? "opacity-100" : "opacity-0"}`} onClick={onClose}></div>
-      <div className={`absolute right-0 top-0 h-full w-full sm:w-[420px] bg-white shadow-2xl transition-transform ${open ? "translate-x-0" : "translate-x-full"}`}>
+      <div
+        className={`absolute inset-0 bg-black/30 transition ${open ? "opacity-100" : "opacity-0"}`}
+        onClick={onClose}
+      />
+      <div
+        className={`absolute right-0 top-0 h-full w-full sm:w-[420px] bg-white shadow-2xl transition-transform ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
         <div className="p-4 border-b flex items-center justify-between">
           <h3 className="font-semibold text-lg">Panier</h3>
-          <button onClick={onClose} className="text-sm">Fermer</button>
+          <button onClick={onClose} className="text-sm">
+            Fermer
+          </button>
         </div>
-        <div className="p-4 space-y-3 overflow-y-auto h-[calc(100%-160px)]">
+
+        <div className="p-4 space-y-3 overflow-y-auto h-[calc(100%-180px)]">
           {items.length === 0 && <p className="text-sm text-gray-500">Votre panier est vide.</p>}
           {items.map((it, idx) => (
             <div key={idx} className="border rounded-xl p-3 flex items-center gap-3">
               <div className="font-medium">{it.brand}</div>
-              <div className="text-sm text-gray-600">{it.amount.toLocaleString()} CFA × {it.qty}</div>
-              <div className="ml-auto font-semibold">{(it.unitPrice * it.qty).toLocaleString()} CFA</div>
+              <div className="text-sm text-gray-600">
+                {it.amount.toLocaleString()} CFA × {it.qty}
+              </div>
+              <div className="ml-auto font-semibold">
+                {(it.unitPrice * it.qty).toLocaleString()} CFA
+              </div>
             </div>
           ))}
         </div>
-        <div className="p-4 border-t">
-          <div className="flex items-center justify-between mb-3">
+
+        <div className="p-4 border-t space-y-2">
+          <div className="flex items-center justify-between">
             <span>Total</span>
             <span className="font-semibold">{total.toLocaleString()} CFA</span>
           </div>
-          <button onClick={onCheckout} disabled={!items.length}
-            className="w-full px-4 py-3 rounded-xl bg-black text-white disabled:opacity-30">Procéder au paiement (démo)</button>
+
+          {/* === Bouton Flutterwave via composant Paiement === */}
+          {items.length > 0 ? (
+            <>
+              <Paiement
+                amount={total}
+                customer={{
+                  email: "client@example.com",
+                  phone: "0700000000",
+                  name: "Client Démo",
+                }}
+                onSuccess={() => onCheckout()}
+                onCancel={() => alert("Paiement annulé")}
+                label="Payer avec Flutterwave (test)"
+              />
+              <p className="text-[11px] text-gray-500">
+                Mode test – aucune carte réelle débitée.
+              </p>
+            </>
+          ) : (
+            <button disabled className="w-full px-4 py-3 rounded-xl bg-gray-200">
+              Panier vide
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -166,14 +237,20 @@ function WalletModal({ open, onClose, wallet, onReveal }) {
                     {w.revealedAt ? (w.fullCode || w.maskedCode) : w.maskedCode}
                   </div>
                   {!w.revealedAt && (
-                    <p className="text-[11px] text-gray-500 mt-1">Le code est masqué. Cliquez sur Révéler pour l’afficher (journalisé).</p>
+                    <p className="text-[11px] text-gray-500 mt-1">
+                      Le code est masqué. Cliquez sur Révéler pour l’afficher (journalisé).
+                    </p>
                   )}
                 </div>
                 <div className="flex gap-2 justify-end">
                   {!w.revealedAt ? (
-                    <button onClick={() => onReveal(w.id)} className="px-3 py-2 rounded-xl border hover:bg-gray-50">Révéler</button>
+                    <button onClick={() => onReveal(w.id)} className="px-3 py-2 rounded-xl border hover:bg-gray-50">
+                      Révéler
+                    </button>
                   ) : (
-                    <span className="text-xs text-green-600">Révélé le {new Date(w.revealedAt).toLocaleString()}</span>
+                    <span className="text-xs text-green-600">
+                      Révélé le {new Date(w.revealedAt).toLocaleString()}
+                    </span>
                   )}
                 </div>
               </div>
@@ -200,28 +277,51 @@ function AdminModal({ open, onClose, onImport }) {
         <div className="grid sm:grid-cols-3 gap-3">
           <div>
             <label className="text-sm">Marque</label>
-            <select value={brand} onChange={(e)=> setBrand(e.target.value)} className="w-full border rounded-xl px-3 py-2">
-              {["PSN","Google Play","Apple","Steam","Netflix"].map(b => <option key={b}>{b}</option>)}
+            <select
+              value={brand}
+              onChange={(e) => setBrand(e.target.value)}
+              className="w-full border rounded-xl px-3 py-2"
+            >
+              {["PSN", "Google Play", "Apple", "Steam", "Netflix"].map((b) => (
+                <option key={b}>{b}</option>
+              ))}
             </select>
           </div>
           <div>
             <label className="text-sm">Montant (CFA)</label>
-            <input type="number" value={amount} onChange={(e)=> setAmount(parseInt(e.target.value||"0"))} className="w-full border rounded-xl px-3 py-2"/>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(parseInt(e.target.value || "0"))}
+              className="w-full border rounded-xl px-3 py-2"
+            />
           </div>
           <div className="sm:col-span-3">
             <label className="text-sm">Codes (un par ligne)</label>
-            <textarea value={codes} onChange={(e)=> setCodes(e.target.value)} className="w-full border rounded-xl px-3 py-2 h-32 font-mono"/>
+            <textarea
+              value={codes}
+              onChange={(e) => setCodes(e.target.value)}
+              className="w-full border rounded-xl px-3 py-2 h-32 font-mono"
+            />
           </div>
           <div className="sm:col-span-3 flex justify-end gap-2">
-            <button onClick={()=> onImport({brand, amount, codes})} className="px-4 py-2 rounded-xl bg-black text-white">Importer (mock)</button>
+            <button
+              onClick={() => onImport({ brand, amount, codes })}
+              className="px-4 py-2 rounded-xl bg-black text-white"
+            >
+              Importer (mock)
+            </button>
           </div>
         </div>
-        <p className="mt-3 text-xs text-gray-500">⚠️ Prod: CSV chiffré côté serveur + KMS. Ici: démo locale.</p>
+        <p className="mt-3 text-xs text-gray-500">
+          ⚠️ Prod: CSV chiffré côté serveur + KMS. Ici: démo locale.
+        </p>
       </div>
     </div>
   );
 }
 
+/* ====== APP ====== */
 export default function App() {
   const [cart, setCart] = useLocalStorage(LS_CART_KEY, []);
   const [wallet, setWallet] = useLocalStorage(LS_WALLET_KEY, []);
@@ -246,7 +346,9 @@ export default function App() {
     });
   };
 
-  const checkout = () => {
+  const total = cart.reduce((s, it) => s + it.unitPrice * it.qty, 0);
+
+  const onCheckout = () => {
     if (!cart.length) return;
     const now = new Date().toISOString();
     const newWallet = [];
@@ -273,7 +375,9 @@ export default function App() {
   };
 
   const reveal = (id) => {
-    setWallet((prev) => prev.map((w) => (w.id === id && !w.revealedAt ? { ...w, revealedAt: new Date().toISOString() } : w)));
+    setWallet((prev) =>
+      prev.map((w) => (w.id === id && !w.revealedAt ? { ...w, revealedAt: new Date().toISOString() } : w))
+    );
   };
 
   const handleAdminImport = ({ brand, amount, codes }) => {
@@ -287,20 +391,29 @@ export default function App() {
   };
 
   useEffect(() => {
-    // supprime les codes complets du localStorage à chaud (démo)
+    // sécurité démo: ne garde pas les codes complets en localStorage
     setWallet((prev) => prev.map((w) => ({ ...w, fullCode: undefined })));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onOpenCart={() => setOpenCart(true)} onOpenWallet={() => setOpenWallet(true)} onOpenAdmin={() => setOpenAdmin(true)} />
+      <Header
+        onOpenCart={() => setOpenCart(true)}
+        onOpenWallet={() => setOpenWallet(true)}
+        onOpenAdmin={() => setOpenAdmin(true)}
+      />
 
       <main className="max-w-6xl mx-auto px-4 py-6">
         <section className="mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold">Vente de cartes dématérialisées (démo)</h1>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">Prototype UI pour parcourir, acheter et stocker des cartes cadeaux. Paiement et coffre-fort simulés côté client pour démonstration uniquement.</p>
-          <div className="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 inline-block">⚠️ Production: paiement via PSP, attribution serveur + chiffrement KMS, journaux d’audit.</div>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">
+            Prototype UI pour parcourir, acheter et stocker des cartes cadeaux. Paiement et coffre-fort simulés côté
+            client pour démonstration uniquement.
+          </p>
+          <div className="mt-3 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 inline-block">
+            ⚠️ Production: paiement via PSP, attribution serveur + chiffrement KMS, journaux d’audit.
+          </div>
         </section>
 
         <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -314,12 +427,23 @@ export default function App() {
           {!lastOrderId ? (
             <p className="text-sm text-gray-500">Vous n'avez pas encore finalisé d'achat.</p>
           ) : (
-            <p className="text-sm text-gray-600">Achat enregistré. Retrouvez vos codes dans <button className="underline" onClick={() => setOpenWallet(true)}>Mon portefeuille</button>.</p>
+            <p className="text-sm text-gray-600">
+              Achat enregistré. Retrouvez vos codes dans{" "}
+              <button className="underline" onClick={() => setOpenWallet(true)}>
+                Mon portefeuille
+              </button>.
+            </p>
           )}
         </section>
       </main>
 
-      <CartDrawer open={openCart} onClose={() => setOpenCart(false)} items={cart} onCheckout={checkout} />
+      <CartDrawer
+        open={openCart}
+        onClose={() => setOpenCart(false)}
+        items={cart}
+        total={total}
+        onCheckout={onCheckout}
+      />
       <WalletModal open={openWallet} onClose={() => setOpenWallet(false)} wallet={wallet} onReveal={reveal} />
       <AdminModal open={openAdmin} onClose={() => setOpenAdmin(false)} onImport={handleAdminImport} />
     </div>
