@@ -3,6 +3,7 @@ import Paiement from "./components/Paiement";
 import googlePlayImg from "./assets/googleplay.jpg";
 import { Routes, Route, Link } from "react-router-dom";
 import Checkout from "./pages/Checkout";
+import { LS_CART_KEY, LS_WALLET_KEY } from "../lib/storage";
 
 /* ====== Demo Gift Cards (JS) ====== */
 
@@ -52,8 +53,8 @@ const VAULT = {
 
 const maskCode = (code) => `••••-••••-••••-${code.slice(-4)}`;
 
-const LS_CART_KEY = "gc_demo_cart";
-const LS_WALLET_KEY = "gc_demo_wallet";
+const LS_CART_KEY = "gc_cart";
+const LS_WALLET_KEY = "gc_wallet";
 
 function useLocalStorage(key, initial) {
   const [val, setVal] = useState(() => {
@@ -188,28 +189,25 @@ function CartDrawer({ open, onClose, items, onCheckout, total }) {
           ))}
         </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t space-y-2">
-          <div className="flex items-center justify-between">
-            <span>Total</span>
-            <span className="font-semibold">{total.toLocaleString()} CFA</span>
-          </div>
+        {/* --- Footer --- */}
+<div className="p-4 border-t space-y-2">
+  <div className="flex items-center justify-between">
+    <span>Total</span>
+    <span className="font-semibold">{total.toLocaleString()} CFA</span>
+  </div>
 
-          {/* ⬇️ Lien vers la page /checkout */}
-          {items.length > 0 ? (
-            <Link
-              to="/checkout"
-              className="block text-center w-full px-4 py-3 rounded-xl bg-black text-white hover:opacity-90"
-              onClick={onClose}
-            >
-              Aller au paiement
-            </Link>
-          ) : (
-            <button disabled className="w-full px-4 py-3 rounded-xl bg-gray-200">
-              Panier vide
-            </button>
-          )}
-        </div>
+  {items.length > 0 ? (
+  <Link
+    to="/checkout"
+    className="block text-center w-full px-4 py-3 rounded-xl bg-black text-white hover:opacity-90"
+    onClick={onClose}
+  >
+    Aller au paiement
+  </Link>
+) : (
+  <button disabled className="w-full px-4 py-3 rounded-xl bg-gray-200">Panier vide</button>
+)}
+</div>
       </div>
     </div>
   );

@@ -2,10 +2,17 @@
 import React, { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Paiement from "../components/Paiement";
+import { LS_CART_KEY, LS_WALLET_KEY } from "../lib/storage";
+
+<div className="text-xs text-gray-500 mb-2">
+  Key FLW: {process.env.REACT_APP_FLW_PUBLIC_KEY ? 'ok' : 'absente'} •
+  Articles: {cart.length} •
+  Total: {total} XOF
+</div>
 
 // Utilise les mêmes clés que l'app
-const LS_CART_KEY = "gc_demo_cart";
-const LS_WALLET_KEY = "gc_demo_wallet";
+const LS_CART_KEY = "gc_cart";
+const LS_WALLET_KEY = "gc_wallet";
 
 function useLocalStorageState(key, fallback) {
   const [val, setVal] = useState(() => {

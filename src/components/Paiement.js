@@ -1,99 +1,92 @@
 // src/components/Paiement.js
 import React, { useEffect, useState, useCallback } from "react";
 
-/**
- * Bouton de paiement Flutterwave (v3) sans dépendance NPM.
- * - Charge le script https://checkout.flutterwave.com/v3.js si nécessaire
- * - Utilise la clé publique depuis process.env.REACT_APP_FLW_PUBLIC_KEY
- *
- * Props :
- *  - amount (number)         : montant en XOF (ex: 10000)
- *  - customer ({email, phone, name})
- *  - onSuccess(response)     : callback après paiement validé (sandbox/real)
- *  - onCancel()              : callback si l’utilisateur ferme annule
- *  - label (string)          : texte du bouton
- */
-export default function Paiement({
-  amount,
-  customer = { email: "test@example.com", phone: "0700000000", name: "Client Démo" },
-  onSuccess,
-  onCancel,
-  label = "Payer avec Flutterwave (test)",
-}) {
-  const [ready, setReady] = useState(false);
-  const pubKey = process.env.REACT_APP_FLW_PUBLIC_KEY;
+function useFlutterwave() {
+  const [ready, setReady] = useState(!!window.FlutterwaveCheckout);
 
-  // Charge le SDK Flutterwave si absent
   useEffect(() => {
     if (window.FlutterwaveCheckout) {
       setReady(true);
       return;
     }
-    const id = "fw-sdk-v3";
-    if (document.getElementById(id)) return; // en cours de chargement
+    const id = "flw-v3-js";
+    if (document.getElementById(id)) {
+      // un autre composant est en train de le charger
+      const int = setInterval(() => {
+        if (window.FlutterwaveCheckout) {
+          setReady(true);
+          clearInterval(int);
+        }
+      }, 200);
+      return () => clearInterval(int);
+    }
     const s = document.createElement("script");
     s.id = id;
     s.src = "https://checkout.flutterwave.com/v3.js";
     s.async = true;
     s.onload = () => setReady(true);
-    s.onerror = () => console.error("Échec de chargement du SDK Flutterwave");
+    s.onerror = () => setReady(false);
     document.body.appendChild(s);
   }, []);
 
-  const pay = useCallback(() => {
-    if (!pubKey) {
-      alert(
-        "Clé publique Flutterwave manquante.\n" +
-          "Ajoute REACT_APP_FLW_PUBLIC_KEY dans tes variables Netlify."
-      );
-      return;
-    }
-    if (!window.FlutterwaveCheckout) {
-      alert("SDK Flutterwave non chargé. Réessaie dans une seconde…");
-      return;
-    }
+  return ready;
+}
+
+export default function Paiement({
+  amount,
+  customer,
+  label = "Payer (test)",
+  onSuccess,
+  onCancel,
+}) {
+  const ready = useFlutterwave();
+  const pubKey = process.env.REACT_APP_FLW_PUBLIC_KEY;
+  const appName = process.env.REACT_APP_APP_NAME || "GiftCards";
+
+  const handlePay = useCallback(() => {
+    if (!ready || !window.FlutterwaveCheckout) return;
 
     window.FlutterwaveCheckout({
       public_key: pubKey,
-      tx_ref: "gc-" + Date.now(),
+      tx_ref: `gc_${Date.now()}`,
       amount: Number(amount || 0),
       currency: "XOF",
-      payment_options: "card, mobilemoneyfranco, account, ussd",
+      payment_options: "card,ussd,banktransfer,mobilemoney",
       customer: {
-        email: customer.email,
-        phonenumber: customer.phone,
-        name: customer.name,
+        email: customer?.email || "client@example.com",
+        phonenumber: customer?.phone || "0700000000",
+        name: customer?.name || "Client Démo",
       },
       customizations: {
-        title: "Achat Carte Cadeau",
-        description: "Paiement démo",
-        logo:
-          "https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg",
+        title: appName,
+        description: "Achat de cartes cadeaux (démo)",
       },
-      callback: (response) => {
+      callback: (payment) => {
         try {
-          onSuccess && onSuccess(response);
+          onSuccess && onSuccess(payment);
         } finally {
-          // La modale se ferme automatiquement côté Flutterwave après callback
+          // la modale se ferme toute seule côté FLW v3
         }
       },
       onclose: () => {
         onCancel && onCancel();
       },
     });
-  }, [amount, customer, onCancel, onSuccess, pubKey]);
+  }, [ready, pubKey, amount, customer, onSuccess, onCancel, appName]);
+
+  const disabled = !ready || !pubKey || !amount;
 
   return (
     <button
       type="button"
-      onClick={pay}
-      disabled={!ready || !amount}
+      onClick={handlePay}
+      disabled={disabled}
       className={`w-full px-4 py-3 rounded-xl ${
-        ready ? "bg-black text-white" : "bg-gray-300 text-gray-600"
+        disabled ? "bg-gray-200 text-gray-500" : "bg-black text-white hover:opacity-90"
       }`}
-      title={!ready ? "Chargement du SDK Flutterwave…" : ""}
+      title={disabled ? "Chargement du module de paiement…" : "Payer avec Flutterwave"}
     >
-      {label}
+      {disabled ? "Chargement du paiement…" : label}
     </button>
   );
 }
