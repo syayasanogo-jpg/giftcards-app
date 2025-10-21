@@ -1,5 +1,8 @@
 import React, { useMemo, useState, useEffect } from "react";
 import Paiement from "./components/Paiement";
+import googlePlayImg from "./assets/googleplay.jpg";
+import { Routes, Route, Link } from "react-router-dom";
+import Checkout from "./pages/Checkout";
 
 /* ====== Demo Gift Cards (JS) ====== */
 
@@ -25,14 +28,13 @@ const PRODUCTS = [
     description: "Cartes PlayStation Store pour jeux, addons et PS Plus. *Démo*.",
   },
   {
-    id: "gplay-ci",
-    brand: "Google Play",
-    image:
-      "https://images.unsplash.com/photo-1593359677879-35c066c3333d?q=80&w=1887&auto=format&fit=crop",
-    faceValues: [10000, 15000, 30000],
-    country: "CI",
-    description: "Apps, films et jeux sur Google Play. *Démo*.",
-  },
+  id: "gplay-ci",
+  brand: "Google Play",
+  description: "Apps, films et jeux sur Google Play.",
+  faceValues: [10000, 15000, 30000],
+  country: "CI",
+  image: "src/assets/googleplay.jpg",
+},
 ];
 
 // Vault mock (NE PAS utiliser en prod côté client)
@@ -147,15 +149,19 @@ function ProductCard({ p, onAdd }) {
 function CartDrawer({ open, onClose, items, onCheckout, total }) {
   return (
     <div className={`fixed inset-0 ${open ? "pointer-events-auto" : "pointer-events-none"}`}>
+      {/* Overlay */}
       <div
         className={`absolute inset-0 bg-black/30 transition ${open ? "opacity-100" : "opacity-0"}`}
         onClick={onClose}
       />
+
+      {/* Panel */}
       <div
         className={`absolute right-0 top-0 h-full w-full sm:w-[420px] bg-white shadow-2xl transition-transform ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
+        {/* Header */}
         <div className="p-4 border-b flex items-center justify-between">
           <h3 className="font-semibold text-lg">Panier</h3>
           <button onClick={onClose} className="text-sm">
@@ -163,8 +169,12 @@ function CartDrawer({ open, onClose, items, onCheckout, total }) {
           </button>
         </div>
 
+        {/* Items */}
         <div className="p-4 space-y-3 overflow-y-auto h-[calc(100%-180px)]">
-          {items.length === 0 && <p className="text-sm text-gray-500">Votre panier est vide.</p>}
+          {items.length === 0 && (
+            <p className="text-sm text-gray-500">Votre panier est vide.</p>
+          )}
+
           {items.map((it, idx) => (
             <div key={idx} className="border rounded-xl p-3 flex items-center gap-3">
               <div className="font-medium">{it.brand}</div>
@@ -178,30 +188,22 @@ function CartDrawer({ open, onClose, items, onCheckout, total }) {
           ))}
         </div>
 
+        {/* Footer */}
         <div className="p-4 border-t space-y-2">
           <div className="flex items-center justify-between">
             <span>Total</span>
             <span className="font-semibold">{total.toLocaleString()} CFA</span>
           </div>
 
-          {/* === Bouton Flutterwave via composant Paiement === */}
+          {/* ⬇️ Lien vers la page /checkout */}
           {items.length > 0 ? (
-            <>
-              <Paiement
-                amount={total}
-                customer={{
-                  email: "client@example.com",
-                  phone: "0700000000",
-                  name: "Client Démo",
-                }}
-                onSuccess={() => onCheckout()}
-                onCancel={() => alert("Paiement annulé")}
-                label="Payer avec Flutterwave (test)"
-              />
-              <p className="text-[11px] text-gray-500">
-                Mode test – aucune carte réelle débitée.
-              </p>
-            </>
+            <Link
+              to="/checkout"
+              className="block text-center w-full px-4 py-3 rounded-xl bg-black text-white hover:opacity-90"
+              onClick={onClose}
+            >
+              Aller au paiement
+            </Link>
           ) : (
             <button disabled className="w-full px-4 py-3 rounded-xl bg-gray-200">
               Panier vide
