@@ -26,7 +26,7 @@ const mask = (code) => `••••-••••-••••-${code.slice(-4)}
 export default function Checkout() {
   const navigate = useNavigate();
   const [cart, setCart] = useLocalStorageState(LS_CART_KEY, []);
-  const [wallet, setWallet] = useLocalStorageState(LS_WALLET_KEY, []);
+  const [, setWallet] = useLocalStorageState(LS_WALLET_KEY, []);
 
   const total = useMemo(
     () => cart.reduce((s, it) => s + it.unitPrice * it.qty, 0),
