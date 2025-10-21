@@ -4,16 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import Paiement from "../components/Paiement";
 import { LS_CART_KEY, LS_WALLET_KEY } from "../lib/storage";
 
-<div className="text-xs text-gray-500 mb-2">
-  Key FLW: {process.env.REACT_APP_FLW_PUBLIC_KEY ? 'ok' : 'absente'} •
-  Articles: {cart.length} •
-  Total: {total} XOF
-</div>
-
-// Utilise les mêmes clés que l'app
-const LS_CART_KEY = "gc_cart";
-const LS_WALLET_KEY = "gc_wallet";
-
 function useLocalStorageState(key, fallback) {
   const [val, setVal] = useState(() => {
     try {
@@ -35,8 +25,6 @@ const mask = (code) => `••••-••••-••••-${code.slice(-4)}
 
 export default function Checkout() {
   const navigate = useNavigate();
-
-  // Panier depuis localStorage (même structure que dans App.js)
   const [cart, setCart] = useLocalStorageState(LS_CART_KEY, []);
   const [wallet, setWallet] = useLocalStorageState(LS_WALLET_KEY, []);
 
@@ -45,7 +33,7 @@ export default function Checkout() {
     [cart]
   );
 
-  // Attribution simulée (comme dans App.js)
+  // Attribution simulée locale (remplace plus tard par ton appel backend)
   const attributeAndStore = () => {
     if (!cart.length) return;
     const now = new Date().toISOString();
@@ -61,12 +49,11 @@ export default function Checkout() {
       };
     });
     setWallet((prev) => [...newWallet, ...prev]);
-    setCart([]); // vide le panier
+    setCart([]);
   };
 
   const handleSuccess = () => {
     attributeAndStore();
-    // Retour à l’accueil après succès
     navigate("/", { replace: true });
   };
 
@@ -81,10 +68,7 @@ export default function Checkout() {
         {cart.length === 0 ? (
           <div className="bg-white rounded-2xl shadow p-6">
             <p className="text-gray-600 mb-4">Votre panier est vide.</p>
-            <Link
-              to="/"
-              className="inline-block px-4 py-2 rounded-xl bg-black text-white"
-            >
+            <Link to="/" className="inline-block px-4 py-2 rounded-xl bg-black text-white">
               Retour à l’accueil
             </Link>
           </div>
@@ -107,9 +91,7 @@ export default function Checkout() {
             <aside className="bg-white rounded-2xl shadow p-4 h-fit space-y-3">
               <div className="flex items-center justify-between">
                 <span>Sous-total</span>
-                <span className="font-medium">
-                  {total.toLocaleString()} CFA
-                </span>
+                <span className="font-medium">{total.toLocaleString()} CFA</span>
               </div>
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <span>Frais</span>
@@ -117,26 +99,18 @@ export default function Checkout() {
               </div>
               <div className="flex items-center justify-between border-t pt-3">
                 <span className="font-semibold">Total</span>
-                <span className="font-semibold">
-                  {total.toLocaleString()} CFA
-                </span>
+                <span className="font-semibold">{total.toLocaleString()} CFA</span>
               </div>
 
               <Paiement
                 amount={total}
-                customer={{
-                  email: "client@example.com",
-                  phone: "0700000000",
-                  name: "Client Démo",
-                }}
+                customer={{ email: "client@example.com", phone: "0700000000", name: "Client Démo" }}
                 onSuccess={handleSuccess}
                 onCancel={() => alert("Paiement annulé")}
                 label="Payer maintenant (test)"
               />
 
-              <p className="text-[11px] text-gray-500">
-                Mode sandbox – aucune carte réelle débitée.
-              </p>
+              <p className="text-[11px] text-gray-500">Sandbox : aucune carte réelle débitée.</p>
             </aside>
           </div>
         )}

@@ -11,7 +11,6 @@ function useFlutterwave() {
     }
     const id = "flw-v3-js";
     if (document.getElementById(id)) {
-      // un autre composant est en train de le charger
       const int = setInterval(() => {
         if (window.FlutterwaveCheckout) {
           setReady(true);
@@ -41,7 +40,7 @@ export default function Paiement({
 }) {
   const ready = useFlutterwave();
   const pubKey = process.env.REACT_APP_FLW_PUBLIC_KEY;
-  const appName = process.env.REACT_APP_APP_NAME || "GiftCards";
+  const appName = process.env.REACT_APP_APP_NAME || "Gift Cards";
 
   const handlePay = useCallback(() => {
     if (!ready || !window.FlutterwaveCheckout) return;
@@ -65,7 +64,7 @@ export default function Paiement({
         try {
           onSuccess && onSuccess(payment);
         } finally {
-          // la modale se ferme toute seule côté FLW v3
+          // La modale se ferme côté Flutterwave
         }
       },
       onclose: () => {
